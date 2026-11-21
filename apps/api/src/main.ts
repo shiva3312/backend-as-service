@@ -32,11 +32,11 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
-  console.log(`🚀 Gateway API server running on port ${port}`);
+  console.log(`🚀 Gateway API server running on port ${port} (Swagger docs: http://localhost:${port}/api/docs)`);
 }
 
 bootstrap();
