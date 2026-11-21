@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ApiClient } from './api-client';
 
 interface AuthUser {
@@ -24,6 +25,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>({
     userId: 'usr_super_admin',
     email: 'admin@modular-platform.io',
@@ -93,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessToken(null);
     ApiClient.setToken(null);
     localStorage.removeItem('admin_access_token');
+    router.push('/login');
   };
 
   return (

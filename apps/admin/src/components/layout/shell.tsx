@@ -1,11 +1,29 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 import { Sidebar } from './sidebar';
 import { Header } from './header';
 import { MobileNav } from './mobile-nav';
 
 export function Shell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  const isPublicRoute = pathname === '/' || pathname === '/login';
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && !isPublicRoute) {
+      router.push('/login');
+    }
+  }, [isLoading, isAuthenticated, isPublicRoute, router]);
+
+  if (isPublicRoute) {
+    return <>{children}</>;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
