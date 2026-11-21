@@ -24,6 +24,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 text-slate-400 text-sm">
+        <div className="flex items-center gap-3 bg-slate-800 border border-slate-700 p-4 rounded-2xl shadow-xl">
+          <span className="h-3 w-3 rounded-full bg-sky-500 animate-ping" />
+          <span>Authenticating Session... Redirecting to Login</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />

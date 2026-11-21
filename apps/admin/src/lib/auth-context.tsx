@@ -26,11 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [user, setUser] = useState<AuthUser | null>({
-    userId: 'usr_super_admin',
-    email: 'admin@modular-platform.io',
-    role: 'SUPER_ADMIN',
-  });
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [selectedAppId, setSelectedAppIdState] = useState<string>('app_9812a');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -43,6 +39,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (savedToken) {
       setAccessToken(savedToken);
       ApiClient.setToken(savedToken);
+      setUser({
+        userId: 'usr_super_admin',
+        email: 'admin@modular-platform.io',
+        role: 'SUPER_ADMIN',
+      });
+    } else {
+      setUser(null);
+      setAccessToken(null);
+      ApiClient.setToken(null);
     }
 
     if (savedAppId) {
