@@ -1,0 +1,48 @@
+import { ApiResponse } from '@modular-platform/shared';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+
+export class ApiClient {
+  private static token: string | null = null;
+
+  static setToken(token: string) {
+    this.token = token;
+  }
+
+  static getToken(): string | null {
+    return this.token;
+  }
+
+  static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string>),
+    };
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers,
+      });
+
+      const data = await response.json();
+      return data as ApiResponse<T>;
+    } catch (error: any) {
+      return {
+        success: false,
+        data: null,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: error.message || 'Network error occurred',
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
+  }
+}
