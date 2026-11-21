@@ -17,7 +17,7 @@ export default function LoginPage() {
     setLoading(true);
     await login(email, password);
     setLoading(false);
-    router.push('/');
+    router.push('/dashboard');
   };
 
   return (
