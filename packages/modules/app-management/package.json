@@ -1,0 +1,21 @@
+{
+  "name": "@modular-platform/module-app-management",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@modular-platform/core": "workspace:*",
+    "@modular-platform/database": "workspace:*",
+    "@modular-platform/shared": "workspace:*",
+    "@nestjs/common": "^10.3.8",
+    "argon2": "^0.40.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "typescript": "^5.4.5"
+  }
+}

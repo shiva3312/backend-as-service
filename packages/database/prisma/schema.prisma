@@ -1,0 +1,240 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AppStatus {
+  ACTIVE
+  SUSPENDED
+  MAINTENANCE
+}
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  BLOCKED
+}
+
+enum SubscriptionStatus {
+  PENDING
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELLED
+  EXPIRED
+}
+
+enum TransactionType {
+  CREDIT_TOPUP
+  FEATURE_DEDUCTION
+  PROMOTIONAL_CREDIT
+  REFUND
+  EXPIRATION
+}
+
+enum StorageProviderType {
+  LOCAL
+  S3
+  CLOUDFLARE_R2
+}
+
+model Application {
+  id               String            @id @default(uuid())
+  name             String
+  slug             String            @unique
+  description      String?
+  status           AppStatus         @default(ACTIVE)
+  apiKey           String            @unique
+  apiSecretHash    String
+  allowedOrigins   String[]          @default([])
+  enabledModules   String[]          @default(["auth", "user-management", "storage"])
+  rateLimitPerMin  Int               @default(60)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+
+  userAppRoles     UserAppRole[]
+  userSubscriptions UserSubscription[]
+  wallets          Wallet[]
+  activationKeys   ActivationKey[]
+  fileAssets       FileAsset[]
+  auditLogs        AuditLog[]
+}
+
+model User {
+  id               String            @id @default(uuid())
+  email            String            @unique
+  passwordHash     String
+  firstName        String?
+  lastName         String?
+  isEmailVerified  Boolean           @default(false)
+  status           UserStatus        @default(ACTIVE)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+
+  userAppRoles     UserAppRole[]
+  subscriptions    UserSubscription[]
+  wallets          Wallet[]
+  keyRedemptions   KeyRedemption[]
+  fileAssets       FileAsset[]
+  auditLogs        AuditLog[]
+}
+
+model UserAppRole {
+  id            String      @id @default(uuid())
+  userId        String
+  appId         String
+  role          String      @default("USER")
+  permissions   String[]    @default([])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application   Application @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, appId])
+}
+
+model SubscriptionPlan {
+  id                   String             @id @default(uuid())
+  name                 String
+  description          String?
+  priceMinorUnits      Int
+  currency             String             @default("USD")
+  billingCycleDays     Int                @default(30)
+  includedWalletCredits Int               @default(0)
+  enabledFeatures      String[]           @default([])
+  isActive             Boolean            @default(true)
+  createdAt            DateTime           @default(now())
+  deletedAt            DateTime?
+
+  userSubscriptions    UserSubscription[]
+}
+
+model UserSubscription {
+  id               String             @id @default(uuid())
+  userId           String
+  appId            String
+  planId           String
+  status           SubscriptionStatus @default(ACTIVE)
+  startsAt         DateTime           @default(now())
+  expiresAt        DateTime
+  autoRenew        Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application      Application        @relation(fields: [appId], references: [id], onDelete: Cascade)
+  plan             SubscriptionPlan   @relation(fields: [planId], references: [id])
+}
+
+model Wallet {
+  id                String             @id @default(uuid())
+  userId            String
+  appId             String
+  balanceMinorUnits Int                @default(0)
+  currency          String             @default("CREDITS")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application       Application        @relation(fields: [appId], references: [id], onDelete: Cascade)
+  transactions      WalletTransaction[]
+
+  @@unique([userId, appId])
+}
+
+model WalletTransaction {
+  id                String          @id @default(uuid())
+  walletId          String
+  type              TransactionType
+  amountMinorUnits  Int
+  balanceAfter      Int
+  idempotencyKey    String          @unique
+  referenceId       String?
+  description       String?
+  createdAt         DateTime        @default(now())
+
+  wallet            Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+}
+
+model ActivationKey {
+  id               String          @id @default(uuid())
+  appId            String
+  keyPrefix        String
+  keyHash          String          @unique
+  maxActivations   Int             @default(1)
+  usedActivations  Int             @default(0)
+  grantCredits     Int             @default(0)
+  grantPlanId      String?
+  expiresAt        DateTime?
+  isActive         Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  deletedAt        DateTime?
+
+  application      Application     @relation(fields: [appId], references: [id], onDelete: Cascade)
+  redemptions      KeyRedemption[]
+}
+
+model KeyRedemption {
+  id               String        @id @default(uuid())
+  keyId            String
+  userId           String
+  redeemedAt       DateTime      @default(now())
+
+  activationKey    ActivationKey @relation(fields: [keyId], references: [id], onDelete: Cascade)
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FileAsset {
+  id                 String              @id @default(uuid())
+  appId              String
+  userId             String
+  filename           String
+  originalName       String
+  mimeType           String
+  sizeBytes          BigInt
+  storageProvider    StorageProviderType @default(LOCAL)
+  storageKey         String
+  isEncrypted        Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
+
+  application        Application         @relation(fields: [appId], references: [id], onDelete: Cascade)
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  encryptionMetadata EncryptionMetadata?
+}
+
+model EncryptionMetadata {
+  id                 String     @id @default(uuid())
+  fileId             String     @unique
+  algorithm          String     @default("AES-256-GCM")
+  encryptedDek       String
+  ivHex              String
+  authTagHex         String
+  createdAt          DateTime   @default(now())
+
+  fileAsset          FileAsset  @relation(fields: [fileId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id               String      @id @default(uuid())
+  appId            String?
+  userId           String?
+  action           String
+  resource         String
+  ipAddress        String?
+  userAgent        String?
+  metadataJson     String?
+  createdAt        DateTime    @default(now())
+
+  application      Application? @relation(fields: [appId], references: [id], onDelete: SetNull)
+  user             User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+}

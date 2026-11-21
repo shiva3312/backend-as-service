@@ -1,0 +1,25 @@
+{
+  "name": "data-manager-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Modular Backend-as-a-Service Platform",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:generate": "pnpm --filter @modular-platform/database db:generate",
+    "db:migrate": "pnpm --filter @modular-platform/database db:migrate",
+    "db:deploy": "pnpm --filter @modular-platform/database db:deploy",
+    "db:seed": "pnpm --filter @modular-platform/database db:seed"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.7.2",
+    "turbo": "^1.13.0",
+    "typescript": "^5.4.5"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

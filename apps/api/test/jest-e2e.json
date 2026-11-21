@@ -1,0 +1,21 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^@modular-platform/database$": "<rootDir>/../../../packages/database/src/index.ts",
+    "^@modular-platform/core$": "<rootDir>/../../../packages/core/src/index.ts",
+    "^@modular-platform/shared$": "<rootDir>/../../../packages/shared/src/index.ts",
+    "^@modular-platform/module-auth$": "<rootDir>/../../../packages/modules/auth/src/index.ts",
+    "^@modular-platform/module-user-management$": "<rootDir>/../../../packages/modules/user-management/src/index.ts",
+    "^@modular-platform/module-app-management$": "<rootDir>/../../../packages/modules/app-management/src/index.ts",
+    "^@modular-platform/module-storage$": "<rootDir>/../../../packages/modules/storage/src/index.ts",
+    "^@modular-platform/module-billing$": "<rootDir>/../../../packages/modules/billing/src/index.ts",
+    "^@modular-platform/module-wallet$": "<rootDir>/../../../packages/modules/wallet/src/index.ts",
+    "^@modular-platform/module-activation$": "<rootDir>/../../../packages/modules/activation/src/index.ts"
+  }
+}

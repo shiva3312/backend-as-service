@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "../../",
+    "paths": {
+      "@modular-platform/core": ["packages/core/dist"],
+      "@modular-platform/database": ["packages/database/dist"],
+      "@modular-platform/shared": ["packages/shared/dist"],
+      "@modular-platform/module-auth": ["packages/modules/auth/dist"],
+      "@modular-platform/module-user-management": ["packages/modules/user-management/dist"],
+      "@modular-platform/module-app-management": ["packages/modules/app-management/dist"],
+      "@modular-platform/module-storage": ["packages/modules/storage/dist"],
+      "@modular-platform/module-billing": ["packages/modules/billing/dist"],
+      "@modular-platform/module-wallet": ["packages/modules/wallet/dist"],
+      "@modular-platform/module-activation": ["packages/modules/activation/dist"]
+    }
+  },
+  "include": ["src/**/*"]
+}

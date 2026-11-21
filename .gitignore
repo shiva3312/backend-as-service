@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build outputs
+dist
+build
+.turbo
+
+# Environment and secrets
+.env
+.env.local
+.env.production
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Database & IDE
+*.db
+*.sqlite
+.idea/caches/
+.idea/workspace.xml
+
+# Storage uploads
+uploads/

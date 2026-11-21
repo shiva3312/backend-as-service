@@ -1,0 +1,347 @@
+Industry-Grade Backend Project Engineering Checklist
+Use this checklist as an engineering standard for designing,
+implementing, reviewing, testing, deploying, and maintaining a
+production-grade backend project. Treat items as applicable gates; mark
+N/A only with a reason.
+1. Architecture & Modularity
+- [ ] Architecture defined before implementation
+- [ ] Modular structure with clear module ownership
+- [ ] Single responsibility per module
+- [ ] Single responsibility per class, service, and function
+- [ ] High cohesion within modules
+- [ ] Low coupling between modules
+- [ ] Module dependency rules documented
+- [ ] Circular dependencies prevented
+- [ ] Public contracts defined for cross-module communication
+- [ ] Internal implementation details hidden
+- [ ] Module registration and lifecycle standardized
+- [ ] Business logic separated from API, database, and infrastructure
+- [ ] Shared core kept small and generic
+- [ ] Architecture decisions documented (ADRs)
+- [ ] New modules can be added without changing unrelated modules
+2. Code Organization & File Structure
+- [ ] Standard folder structure across the project
+- [ ] Consistent file naming conventions
+- [ ] Consistent class, function, variable, and constant naming
+- [ ] No giant files containing unrelated logic
+- [ ] No giant service classes
+- [ ] No duplicate or redundant files
+- [ ] No unused code, imports, variables, or dependencies
+- [ ] Files grouped by module and responsibility
+- [ ] API, application, domain, and infrastructure separated
+- [ ] Barrel exports controlled to avoid circular imports
+- [ ] Easy navigation for new developers and AI agents
+- [ ] Temporary, generated, and source files separated
+3. Functions, Methods & Reusable Code
+- [ ] Each function performs one clearly defined task
+- [ ] Functions are small and readable
+- [ ] Repeated logic extracted into reusable functions
+- [ ] DRY principle applied where it improves maintainability
+- [ ] Reusable functions have clear input/output contracts
+- [ ] Shared utilities avoid hidden side effects
+- [ ] Business-specific logic is not misplaced into generic utilities
+- [ ] Functions avoid unrelated global state
+- [ ] Parameters are not unnecessarily numerous
+- [ ] Return types are explicit and appropriate
+- [ ] Input validation is performed at boundaries
+- [ ] Null, undefined, empty, and invalid values handled
+- [ ] Error handling is consistent
+- [ ] Functions are unit-testable
+- [ ] Async operations handled correctly
+- [ ] Shared functionality reused instead of reimplemented
+- [ ] No premature abstractions or overengineering
+- [ ] Duplicate implementations are reviewed for shared service,
+  utility, helper, policy, or component extraction
+4. Integration & Interoperability
+- [ ] Modules integrate through defined contracts
+- [ ] External services accessed through adapters/providers
+- [ ] External integrations isolated from business logic
+- [ ] Database integration isolated behind suitable boundaries
+- [ ] Payment, email, and storage providers are replaceable
+- [ ] API integrations have timeouts
+- [ ] Retry policies defined where appropriate
+- [ ] Retries avoid duplicate actions and are idempotent
+- [ ] Idempotency implemented for critical operations
+- [ ] Events have standardized schemas
+- [ ] Event versioning considered
+- [ ] Background jobs integrated consistently
+- [ ] Integration failures have recovery mechanisms
+- [ ] Integration tests cover important boundaries
+- [ ] Vendor-specific details don't leak across the codebase
+5. Security
+- [ ] Authentication implemented correctly
+- [ ] Authorization enforced on every protected operation
+- [ ] RBAC, permissions, and policies defined
+- [ ] Resource ownership verified server-side
+- [ ] Tenant/application isolation enforced
+- [ ] All external input validated
+- [ ] SQL/command injection prevention
+- [ ] XSS prevention where applicable
+- [ ] SSRF protection
+- [ ] CSRF protection where applicable
+- [ ] Rate limiting
+- [ ] Brute-force protection
+- [ ] Passwords securely hashed (e.g., Argon2id)
+- [ ] Refresh-token lifecycle secured
+- [ ] API keys securely generated and stored
+- [ ] Secrets never committed
+- [ ] Secrets never exposed in logs or responses
+- [ ] Sensitive data redacted
+- [ ] Secure HTTP headers configured
+- [ ] TLS enforced in production
+- [ ] Upload restrictions and content validation
+- [ ] Dependency vulnerability scanning
+- [ ] Security audit logging
+- [ ] Session/account revocation capability
+- [ ] Security tests for critical endpoints
+6. Database & Data Integrity
+- [ ] Schema follows a consistent standard
+- [ ] Entities/tables have clear ownership
+- [ ] Relationships and constraints defined correctly
+- [ ] Foreign keys used appropriately
+- [ ] Unique constraints defined where needed
+- [ ] Indexes based on query patterns
+- [ ] Migrations version-controlled
+- [ ] Production schema changes tracked and reviewed
+- [ ] Transactions used for multi-step critical operations
+- [ ] Race conditions considered
+- [ ] Data consistency maintained
+- [ ] Soft-delete/hard-delete rules defined
+- [ ] Data retention policies defined
+- [ ] Important records are auditable
+- [ ] Pagination used for large datasets
+- [ ] N+1 queries avoided
+- [ ] Backup strategy defined
+- [ ] Restore process tested
+- [ ] Seed data controlled and safe
+7. API Design & Standards
+- [ ] API naming conventions standardized
+- [ ] API versioning implemented
+- [ ] Request/response structures consistent
+- [ ] DTOs/schemas defined
+- [ ] Request validation enforced
+- [ ] Response validation considered
+- [ ] HTTP status codes used correctly
+- [ ] Error response format standardized
+- [ ] Auth and permission requirements documented
+- [ ] Pagination, filtering, and sorting standardized
+- [ ] Rate limits documented
+- [ ] OpenAPI documentation generated
+- [ ] Breaking changes handled deliberately
+- [ ] Idempotency supported for critical operations
+- [ ] API integration tests exist
+- [ ] Internal database details not leaked
+8. Error Handling & Resilience
+- [ ] Centralized error-handling strategy
+- [ ] Custom error types used consistently
+- [ ] Errors include useful diagnostic context
+- [ ] User-facing errors don't expose internals
+- [ ] Stack traces hidden in production responses
+- [ ] Errors logged with correlation/trace IDs
+- [ ] External service failures handled gracefully
+- [ ] Timeouts configured
+- [ ] Retries bounded with backoff
+- [ ] Circuit breakers considered for unstable dependencies
+- [ ] Queue failure and dead-letter strategy defined
+- [ ] Graceful shutdown implemented
+- [ ] Partial failure and recovery considered
+9. Testing & Quality Assurance
+- [ ] Unit tests for business logic
+- [ ] Integration tests for module interactions
+- [ ] API tests for endpoints
+- [ ] E2E tests for critical workflows
+- [ ] Regression tests for bug fixes
+- [ ] Authorization tests
+- [ ] Security tests
+- [ ] Negative tests (invalid input, unauthenticated, unauthorized,
+  missing records)
+- [ ] Edge cases covered
+- [ ] Transaction tests
+- [ ] External integrations mocked/faked appropriately
+- [ ] Critical paths have meaningful coverage
+- [ ] Tests are deterministic
+- [ ] No production data used in tests
+- [ ] CI runs tests automatically
+- [ ] Skipped tests are tracked and justified
+- [ ] Test failures block merge
+10. Code Quality & Maintainability
+- [ ] TypeScript strict mode enabled (for TS projects)
+- [ ] Avoid unnecessary any
+- [ ] Unsafe casts justified
+- [ ] ESLint rules enforced
+- [ ] Formatting standardized
+- [ ] Dead code removed
+- [ ] Magic numbers replaced with named constants where appropriate
+- [ ] Comments explain why, not obvious what
+- [ ] TODOs linked to work items or explained
+- [ ] Complexity controlled
+- [ ] Names are meaningful and consistent
+- [ ] Code review required
+- [ ] Copied code reviewed and understood
+- [ ] Dependencies justified
+- [ ] Package versions controlled
+- [ ] Established reusable patterns followed
+11. Performance & Scalability
+- [ ] Performance requirements defined
+- [ ] Slow operations identified
+- [ ] Database queries optimized
+- [ ] Indexes verified
+- [ ] API response times measured
+- [ ] Large responses paginated
+- [ ] CPU-heavy work moved to background processing
+- [ ] Background jobs used for long-running tasks
+- [ ] Memory usage monitored
+- [ ] Cache strategy defined
+- [ ] Cache invalidation rules defined
+- [ ] Cache used appropriately
+- [ ] Queue concurrency controlled
+- [ ] Rate limits protect against abuse
+- [ ] Load testing performed for important APIs
+- [ ] Horizontal scaling considered
+- [ ] Unnecessary network/database calls avoided
+12. Logging, Monitoring & Observability
+- [ ] Structured logs (JSON)
+- [ ] Log levels consistent
+- [ ] Correlation/request IDs included
+- [ ] Distributed tracing supported
+- [ ] Error tracking enabled
+- [ ] API latency monitored
+- [ ] Database latency monitored
+- [ ] Queue health monitored
+- [ ] Health endpoints implemented
+- [ ] Readiness checks implemented
+- [ ] Liveness checks implemented
+- [ ] Critical business events logged
+- [ ] Security events logged
+- [ ] Sensitive values excluded from logs
+- [ ] Alerting for critical failures
+- [ ] Dashboards available
+13. Configuration & Environments
+- [ ] Configuration centralized
+- [ ] Environment variables validated at startup
+- [ ] .env.example maintained
+- [ ] Environment URLs not hard-coded
+- [ ] Secrets not hard-coded
+- [ ] Development environment defined
+- [ ] Test/QA environment defined
+- [ ] Production environment defined
+- [ ] Environments isolated
+- [ ] Production defaults secure
+- [ ] Configuration changes documented
+- [ ] Feature flags available where useful
+- [ ] Secret rotation strategy defined
+14. Documentation
+- [ ] Project overview
+- [ ] Architecture documentation
+- [ ] Project structure guide
+- [ ] Setup instructions
+- [ ] Installation guide
+- [ ] Environment configuration guide
+- [ ] API documentation
+- [ ] Module documentation
+- [ ] Database schema documentation
+- [ ] Integration documentation
+- [ ] Security documentation
+- [ ] Deployment guide
+- [ ] Troubleshooting guide
+- [ ] Contribution guide
+- [ ] Coding standards
+- [ ] Testing guide
+- [ ] Decisions documented
+- [ ] Docs updated with code changes
+15. Git & Team Workflow
+- [ ] Git workflow and branch strategy defined
+- [ ] Feature branches used
+- [ ] Conventional commit format
+- [ ] PR template
+- [ ] Issue/task template
+- [ ] Code review required
+- [ ] Protected branches configured
+- [ ] CI checks required before merge
+- [ ] CODEOWNERS configured where useful
+- [ ] PR size controlled
+- [ ] Secret scanning enabled
+- [ ] Changelog/release notes process
+16. CI/CD & Automated Quality Gates
+- [ ] CI pipeline configured
+- [ ] Dependency installation
+- [ ] Formatting check
+- [ ] Lint
+- [ ] Typecheck
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] Build
+- [ ] Dependency scan
+- [ ] Security scan
+- [ ] Architecture validation
+- [ ] Migration validation
+- [ ] Container scan
+- [ ] Artifacts versioned
+- [ ] Deployment automated
+- [ ] Rollback process
+- [ ] Production approval gates
+- [ ] Post-deployment health verification
+17. Deployment & Infrastructure
+- [ ] Docker setup standardized
+- [ ] Containers run as non-root where practical
+- [ ] Container images minimized and pinned
+- [ ] Development setup reproducible
+- [ ] Production configuration separated
+- [ ] Reverse proxy configured
+- [ ] HTTPS configured
+- [ ] Firewall/network boundaries defined
+- [ ] Database not publicly exposed
+- [ ] Redis not publicly exposed
+- [ ] Persistent storage configured
+- [ ] Backup automation configured
+- [ ] Backup retention policy defined
+- [ ] Restore tested
+- [ ] Zero-downtime deployment considered
+- [ ] Rollback procedure documented
+- [ ] Deployment logs accessible
+- [ ] Infrastructure documented as code where practical
+18. Reusability & Shared Systems
+- [ ] Common functionality identified
+- [ ] Shared utilities separated from business modules
+- [ ] Shared validation schemas available
+- [ ] Common error system reusable
+- [ ] Common logging system reusable
+- [ ] Common pagination reusable
+- [ ] Common API response conventions reusable
+- [ ] Common authentication mechanisms reusable
+- [ ] Common authorization/policy mechanisms reusable
+- [ ] Common file storage abstraction reusable
+- [ ] Common event system reusable
+- [ ] Common queue/job patterns reusable
+- [ ] Common notification system reusable
+- [ ] Common audit system reusable
+- [ ] Reusable functionality documented
+19. AI-Agent & Developer Readiness (Optional but Recommended)
+- [ ] Root agent/developer instructions exist and are concise
+- [ ] Architecture and module catalog are navigable
+- [ ] Module-local guidance maintained
+- [ ] Task workflow documented (discover, plan, implement, test,
+  review, report)
+- [ ] Skills/workflows defined for common task types
+- [ ] Dependency/module indexes generated
+- [ ] Impact-analysis tooling available
+- [ ] Risk classification defined
+- [ ] High-risk changes require independent review
+- [ ] Agents must report actual validation evidence
+- [ ] Agent output template includes summary, files changed, tests,
+  risks, and remaining work
+20. Definition of Done (Before Merge/Release)
+- [ ] Acceptance criteria met
+- [ ] Implementation follows approved architecture
+- [ ] No unrelated changes
+- [ ] Code quality checks pass
+- [ ] Typecheck/lint/build pass
+- [ ] Tests pass
+- [ ] Security requirements reviewed
+- [ ] API/docs updated
+- [ ] DB migrations reviewed and tested (if applicable)
+- [ ] Observability added where needed
+- [ ] Reviewer approval received
+- [ ] CI quality gates pass
+- [ ] No known critical/high issues left without approved mitigation
+- [ ] Deployment and rollback impact understood
