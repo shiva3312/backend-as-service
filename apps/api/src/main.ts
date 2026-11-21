@@ -9,6 +9,21 @@ async function bootstrap() {
     new FastifyAdapter({ logger: true }),
   );
 
+  // Enable CORS for frontend applications (web admin portal, mobile apps, SPAs)
+  app.enableCors({
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'x-app-id',
+      'Accept',
+      'Origin',
+      'X-Requested-With',
+    ],
+    credentials: true,
+  });
+
   const config = new DocumentBuilder()
     .setTitle('Modular Backend Platform API')
     .setDescription('Production-grade Backend-as-a-Service REST endpoints & OpenAPI specs')
