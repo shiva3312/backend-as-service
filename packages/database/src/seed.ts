@@ -67,11 +67,38 @@ async function main() {
 
   console.log(`✅ Plans seeded: ${freePlan.name}, ${proPlan.name}`);
 
-  // 3. Create Admin User
-  const adminPasswordHash = await argon2.hash('Admin@123456');
-  const adminUser = await prisma.user.upsert({
+  // 3. Create Admin Users
+  const adminPasswordHash = await argon2.hash('Password123!');
+
+  const adminUser1 = await prisma.user.upsert({
+    where: { email: 'admin@modular-platform.io' },
+    update: { passwordHash: adminPasswordHash },
+    create: {
+      email: 'admin@modular-platform.io',
+      passwordHash: adminPasswordHash,
+      firstName: 'Platform',
+      lastName: 'Super Admin',
+      isEmailVerified: true,
+      userAppRoles: {
+        create: {
+          appId: app.id,
+          role: 'SUPER_ADMIN',
+          permissions: ['*'],
+        },
+      },
+      wallets: {
+        create: {
+          appId: app.id,
+          balanceMinorUnits: 5000,
+          currency: 'CREDITS',
+        },
+      },
+    },
+  });
+
+  const adminUser2 = await prisma.user.upsert({
     where: { email: 'admin@modularplatform.io' },
-    update: {},
+    update: { passwordHash: adminPasswordHash },
     create: {
       email: 'admin@modularplatform.io',
       passwordHash: adminPasswordHash,
@@ -95,7 +122,7 @@ async function main() {
     },
   });
 
-  console.log(`✅ Admin User created: ${adminUser.email} (${adminUser.id})`);
+  console.log(`✅ Admin Users created: ${adminUser1.email}, ${adminUser2.email}`);
   console.log('🎉 Seeding completed successfully!');
 }
 

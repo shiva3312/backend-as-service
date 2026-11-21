@@ -9,6 +9,9 @@ async function bootstrap() {
     new FastifyAdapter({ logger: true }),
   );
 
+  // Set global API routing prefix (/api/v1/auth/login, /api/v1/apps, etc.)
+  app.setGlobalPrefix('api');
+
   // Enable CORS for frontend applications (web admin portal, mobile apps, SPAs)
   app.enableCors({
     origin: true,
