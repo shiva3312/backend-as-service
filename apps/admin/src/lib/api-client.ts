@@ -4,8 +4,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/a
 
 export class ApiClient {
   private static token: string | null = null;
+  private static appId: string = 'app_9812a';
 
-  static setToken(token: string) {
+  static setToken(token: string | null) {
     this.token = token;
   }
 
@@ -13,9 +14,18 @@ export class ApiClient {
     return this.token;
   }
 
+  static setAppId(appId: string) {
+    this.appId = appId;
+  }
+
+  static getAppId(): string {
+    return this.appId;
+  }
+
   static async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'x-app-id': this.appId,
       ...(options.headers as Record<string, string>),
     };
 
@@ -36,8 +46,8 @@ export class ApiClient {
         success: false,
         data: null,
         error: {
-          code: 'NETWORK_ERROR',
-          message: error.message || 'Network error occurred',
+          code: 'NETWORK_OFFLINE',
+          message: error.message || 'API Gateway Offline / Fallback Mode',
         },
         meta: {
           timestamp: new Date().toISOString(),

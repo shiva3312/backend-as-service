@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ApiClient } from '@/lib/api-client';
+import { useAuth } from '@/lib/auth-context';
 import { Users, Search, ShieldCheck, Smartphone, Trash2, AlertTriangle } from 'lucide-react';
 
 interface UserRecord {
@@ -14,7 +16,9 @@ interface UserRecord {
 }
 
 export default function UsersPage() {
+  const { selectedAppId } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<UserRecord[]>([
     {
       id: 'usr_8819',
@@ -45,6 +49,27 @@ export default function UsersPage() {
     },
   ]);
 
+  useEffect(() => {
+    async function fetchUserProfile() {
+      setLoading(true);
+      const res = await ApiClient.request<any>('/v1/users/me');
+      if (res.success && res.data) {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.appId === selectedAppId
+              ? {
+                  ...u,
+                  email: res.data.email || u.email,
+                }
+              : u
+          )
+        );
+      }
+      setLoading(false);
+    }
+    fetchUserProfile();
+  }, [selectedAppId]);
+
   const revokeSessions = (userId: string) => {
     setUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, activeSessions: 0 } : u))
@@ -67,7 +92,7 @@ export default function UsersPage() {
             </h1>
           </div>
           <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Manage tenant user accounts, RBAC/ABAC security roles, and active JWT device sessions.
+            Manage tenant user accounts, RBAC/ABAC security roles, and active JWT device sessions via `/v1/users`.
           </p>
         </div>
       </div>
@@ -84,7 +109,7 @@ export default function UsersPage() {
         />
       </div>
 
-      {/* Responsive Users List */}
+      {/* Users List */}
       <div className="space-y-4">
         {filteredUsers.map((user) => (
           <div

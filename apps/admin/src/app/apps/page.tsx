@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ApiClient } from '@/lib/api-client';
+import { useAuth } from '@/lib/auth-context';
 import {
   AppWindow,
   Plus,
@@ -29,8 +31,12 @@ interface ClientApp {
 }
 
 export default function AppsPage() {
+  const { selectedAppId } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [newAppName, setNewAppName] = useState('');
 
   const [appsList, setAppsList] = useState<ClientApp[]>([
     {
@@ -59,7 +65,28 @@ export default function AppsPage() {
     },
   ]);
 
-  const toggleModule = (appId: string, moduleName: keyof ClientApp['modules']) => {
+  useEffect(() => {
+    async function fetchAppDetails() {
+      setLoading(true);
+      const res = await ApiClient.request<any>(`/v1/apps/${selectedAppId}`);
+      if (res.success && res.data) {
+        setAppsList((prev) =>
+          prev.map((app) =>
+            app.id === selectedAppId
+              ? {
+                  ...app,
+                  name: res.data.appName || res.data.name || app.name,
+                }
+              : app
+          )
+        );
+      }
+      setLoading(false);
+    }
+    fetchAppDetails();
+  }, [selectedAppId]);
+
+  const toggleModule = async (appId: string, moduleName: keyof ClientApp['modules']) => {
     setAppsList((prev) =>
       prev.map((app) => {
         if (app.id === appId) {
@@ -74,6 +101,37 @@ export default function AppsPage() {
         return app;
       })
     );
+
+    await ApiClient.request(`/v1/apps/${appId}/modules/${moduleName}/enable`, {
+      method: 'POST',
+    });
+  };
+
+  const handleCreateApp = async () => {
+    if (!newAppName.trim()) return;
+    setLoading(true);
+
+    const res = await ApiClient.request<any>('/v1/apps', {
+      method: 'POST',
+      body: JSON.stringify({
+        appName: newAppName,
+        enabledModules: ['auth', 'storage'],
+      }),
+    });
+
+    const newApp: ClientApp = {
+      id: res.data?.id || `app_${Math.random().toString(36).substring(2, 7)}`,
+      name: newAppName,
+      apiKey: res.data?.apiKey || `ak_live_${Math.random().toString(36).substring(2, 12)}`,
+      status: 'ACTIVE',
+      createdAt: new Date().toISOString().split('T')[0],
+      modules: { auth: true, billing: false, wallet: false, storage: true, activation: false },
+    };
+
+    setAppsList((prev) => [newApp, ...prev]);
+    setNewAppName('');
+    setShowModal(false);
+    setLoading(false);
   };
 
   const copyKey = (key: string, id: string) => {
@@ -98,15 +156,52 @@ export default function AppsPage() {
             </h1>
           </div>
           <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Provision tenant applications, manage API keys, and configure dynamic module feature flags.
+            Provision tenant applications, manage API keys, and configure dynamic module feature flags via `/v1/apps`.
           </p>
         </div>
-        <button className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-medium text-sm transition-colors shadow-sm">
+        <button
+          onClick={() => setShowModal(true)}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-medium text-sm transition-colors shadow-sm"
+        >
           <Plus className="h-4 w-4" /> Provision New App
         </button>
       </div>
 
-      {/* Search & Filter Bar */}
+      {/* New App Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 max-w-md w-full space-y-4">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Provision New Tenant App</h2>
+            <div>
+              <label className="text-xs font-semibold text-slate-500 block mb-1">Application Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Flutter Mobile Client"
+                value={newAppName}
+                onChange={(e) => setNewAppName(e.target.value)}
+                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none"
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateApp}
+                disabled={loading}
+                className="px-4 py-2 rounded-xl bg-sky-600 text-white text-xs font-semibold hover:bg-sky-700"
+              >
+                {loading ? 'Creating...' : 'Create Application'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Search Bar */}
       <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
         <Search className="h-4 w-4 text-slate-400" />
         <input
@@ -118,7 +213,7 @@ export default function AppsPage() {
         />
       </div>
 
-      {/* Responsive Cards Layout for Mobile & Tablet */}
+      {/* Cards Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredApps.map((app) => (
           <div
@@ -170,7 +265,6 @@ export default function AppsPage() {
               })}
             </div>
 
-            {/* Footer Actions */}
             <div className="border-t border-slate-100 dark:border-slate-800 pt-3 flex items-center justify-between text-xs text-slate-500">
               <span>Created {app.createdAt}</span>
               <button className="flex items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-sky-600 font-medium">

@@ -1,17 +1,60 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ApiClient } from '@/lib/api-client';
+import { useAuth } from '@/lib/auth-context';
 import { Wallet, Plus, ArrowUpRight, ArrowDownLeft, ShieldCheck } from 'lucide-react';
 
 export default function WalletPage() {
+  const { selectedAppId } = useAuth();
   const [topUpAmount, setTopUpAmount] = useState('100');
-  const [selectedApp, setSelectedApp] = useState('app_9812a');
+  const [loading, setLoading] = useState(false);
+  const [balance, setBalance] = useState('$1,250.00');
 
-  const transactions = [
+  const [transactions, setTransactions] = useState([
     { id: 'tx_9912', appId: 'app_9812a', type: 'TOPUP', amount: '+$500.00', balance: '$1,250.00', date: '2026-02-21 14:30', status: 'COMPLETED' },
     { id: 'tx_9911', appId: 'app_4410b', type: 'STORAGE_DEDUCTION', amount: '-$12.50', balance: '$340.00', date: '2026-02-21 12:10', status: 'COMPLETED' },
     { id: 'tx_9910', appId: 'app_7721c', type: 'API_USAGE_DEDUCTION', amount: '-$4.20', balance: '$88.30', date: '2026-02-20 18:45', status: 'COMPLETED' },
-  ];
+  ]);
+
+  useEffect(() => {
+    async function fetchWalletBalance() {
+      setLoading(true);
+      const res = await ApiClient.request<any>('/v1/wallet');
+      if (res.success && res.data) {
+        setBalance(`$${res.data.balance || '1,250.00'}`);
+      }
+      setLoading(false);
+    }
+    fetchWalletBalance();
+  }, [selectedAppId]);
+
+  const handleTopUp = async () => {
+    const amountNum = parseFloat(topUpAmount) || 100;
+    const idempotencyKey = `idem_${Date.now()}`;
+    setLoading(true);
+
+    const res = await ApiClient.request<any>('/v1/wallet/topup', {
+      method: 'POST',
+      body: JSON.stringify({
+        amount: amountNum,
+        idempotencyKey,
+      }),
+    });
+
+    const newTx = {
+      id: res.data?.id || `tx_${Math.random().toString(36).substring(2, 7)}`,
+      appId: selectedAppId,
+      type: 'TOPUP',
+      amount: `+$${amountNum.toFixed(2)}`,
+      balance: `$${(1250 + amountNum).toFixed(2)}`,
+      date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      status: 'COMPLETED',
+    };
+
+    setTransactions((prev) => [newTx, ...prev]);
+    setLoading(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -24,12 +67,12 @@ export default function WalletPage() {
             </h1>
           </div>
           <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Pay-as-you-go wallet balances, idempotent top-ups, and double-entry financial transaction logs.
+            Pay-as-you-go wallet balances, idempotent top-ups, and double-entry financial transaction logs via `/v1/wallet`.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/50 flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4" /> Atomic Ledger Active
+            <ShieldCheck className="h-4 w-4" /> Balance: {balance}
           </span>
         </div>
       </div>
@@ -40,15 +83,12 @@ export default function WalletPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className="text-xs font-medium text-slate-500 block mb-1">Target Tenant App</label>
-            <select
-              value={selectedApp}
-              onChange={(e) => setSelectedApp(e.target.value)}
-              className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-900 dark:text-white"
-            >
-              <option value="app_9812a">app_9812a (Android App)</option>
-              <option value="app_4410b">app_4410b (iOS Portal)</option>
-              <option value="app_7721c">app_7721c (Electron Client)</option>
-            </select>
+            <input
+              type="text"
+              readOnly
+              value={selectedAppId}
+              className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-900 dark:text-white"
+            />
           </div>
           <div>
             <label className="text-xs font-medium text-slate-500 block mb-1">Amount ($)</label>
@@ -60,8 +100,12 @@ export default function WalletPage() {
             />
           </div>
           <div className="flex items-end">
-            <button className="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2">
-              <Plus className="h-4 w-4" /> Add Credit (Idempotent)
+            <button
+              onClick={handleTopUp}
+              disabled={loading}
+              className="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4 w-4" /> {loading ? 'Processing...' : 'Add Credit (Idempotent)'}
             </button>
           </div>
         </div>

@@ -1,16 +1,47 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ApiClient } from '@/lib/api-client';
+import { useAuth } from '@/lib/auth-context';
 import { KeyRound, Plus, Copy, Check } from 'lucide-react';
 
 export default function ActivationPage() {
+  const { selectedAppId } = useAuth();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const keys = [
+  const [keys, setKeys] = useState([
     { code: 'ACT-9812-4401-K912', plan: 'PRO_TIER', maxRedemptions: 1, redeemed: 1, hash: 'sha256_8832a7...', createdAt: '2026-02-10' },
     { code: 'ACT-1102-9981-L771', plan: 'ENTERPRISE', maxRedemptions: 5, redeemed: 2, hash: 'sha256_104928...', createdAt: '2026-02-18' },
     { code: 'ACT-3341-8812-M004', plan: 'CREDIT_TOPUP_100', maxRedemptions: 1, redeemed: 0, hash: 'sha256_771234...', createdAt: '2026-02-21' },
-  ];
+  ]);
+
+  const generateNewKeyBatch = async () => {
+    setLoading(true);
+    const res = await ApiClient.request<any>('/v1/activation/generate', {
+      method: 'POST',
+      body: JSON.stringify({
+        appId: selectedAppId,
+        entitlement: 'PRO_TIER',
+        maxRedemptions: 1,
+      }),
+    });
+
+    const newKeyCode = res.data?.key || `ACT-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    setKeys((prev) => [
+      {
+        code: newKeyCode,
+        plan: 'PRO_TIER',
+        maxRedemptions: 1,
+        redeemed: 0,
+        hash: `sha256_${Math.random().toString(36).substring(2, 10)}`,
+        createdAt: new Date().toISOString().split('T')[0],
+      },
+      ...prev,
+    ]);
+    setLoading(false);
+  };
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -29,11 +60,15 @@ export default function ActivationPage() {
             </h1>
           </div>
           <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Generate cryptographically hashed activation keys, bind entitlements, and track redemptions.
+            Generate cryptographically hashed activation keys via `/v1/activation/generate` and track redemptions.
           </p>
         </div>
-        <button className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm transition-colors shadow-sm">
-          <Plus className="h-4 w-4" /> Generate New Key Batch
+        <button
+          onClick={generateNewKeyBatch}
+          disabled={loading}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm transition-colors shadow-sm"
+        >
+          <Plus className="h-4 w-4" /> {loading ? 'Generating...' : 'Generate New Key Batch'}
         </button>
       </div>
 

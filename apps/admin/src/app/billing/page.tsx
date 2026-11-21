@@ -1,11 +1,16 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { ApiClient } from '@/lib/api-client';
+import { useAuth } from '@/lib/auth-context';
 import { CreditCard, Check } from 'lucide-react';
 
 export default function BillingPage() {
-  const plans = [
+  const { selectedAppId } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [plans, setPlans] = useState([
     {
+      id: 'plan_free',
       name: 'Free Tier',
       price: '$0 / mo',
       quota: '1,000 API req / day',
@@ -13,6 +18,7 @@ export default function BillingPage() {
       isPopular: false,
     },
     {
+      id: 'plan_pro',
       name: 'Pro Tier',
       price: '$49 / mo',
       quota: '100,000 API req / day',
@@ -20,13 +26,43 @@ export default function BillingPage() {
       isPopular: true,
     },
     {
+      id: 'plan_enterprise',
       name: 'Enterprise BaaS',
       price: '$299 / mo',
       quota: 'Unlimited API reqs',
       features: ['AES-256-GCM Envelope Encryption', 'Activation Key Generator', 'Dedicated Redis Queue', 'Unlimited Tenants'],
       isPopular: false,
     },
-  ];
+  ]);
+
+  useEffect(() => {
+    async function fetchPlans() {
+      setLoading(true);
+      const res = await ApiClient.request<any[]>('/v1/subscriptions/plans');
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        setPlans(
+          res.data.map((p, idx) => ({
+            id: p.id || `plan_${idx}`,
+            name: p.name || 'Subscription Plan',
+            price: p.price ? `$${p.price} / mo` : '$49 / mo',
+            quota: p.quota || 'Standard Quota',
+            features: p.features || ['BaaS Modules', 'Tenant Scoping'],
+            isPopular: idx === 1,
+          }))
+        );
+      }
+      setLoading(false);
+    }
+    fetchPlans();
+  }, [selectedAppId]);
+
+  const handleSubscribe = async (planId: string) => {
+    await ApiClient.request('/v1/subscriptions/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ planId }),
+    });
+    alert(`Subscribed app ${selectedAppId} to plan ${planId}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -39,7 +75,7 @@ export default function BillingPage() {
             </h1>
           </div>
           <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Configure subscription plans, quota limits, and dynamic feature entitlement rules.
+            Configure subscription plans, quota limits, and dynamic feature entitlement rules via `/v1/subscriptions`.
           </p>
         </div>
       </div>
@@ -72,7 +108,10 @@ export default function BillingPage() {
               </div>
             </div>
 
-            <button className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-sky-600 hover:text-white dark:hover:bg-sky-600 text-slate-800 dark:text-slate-200 font-semibold text-xs transition-colors">
+            <button
+              onClick={() => handleSubscribe(plan.id)}
+              className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-sky-600 hover:text-white dark:hover:bg-sky-600 text-slate-800 dark:text-slate-200 font-semibold text-xs transition-colors"
+            >
               Configure Entitlements
             </button>
           </div>

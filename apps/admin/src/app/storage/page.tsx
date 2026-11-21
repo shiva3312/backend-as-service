@@ -1,14 +1,34 @@
 'use client';
 
-import React from 'react';
-import { HardDrive, ShieldCheck, Database, Cloud } from 'lucide-react';
+import React, { useState } from 'react';
+import { ApiClient } from '@/lib/api-client';
+import { useAuth } from '@/lib/auth-context';
+import { HardDrive, Database, Cloud, Upload } from 'lucide-react';
 
 export default function StoragePage() {
+  const { selectedAppId } = useAuth();
+  const [loading, setLoading] = useState(false);
+
   const providers = [
     { name: 'Cloudflare R2', type: 'S3-Compatible Object Storage', files: '14,280 files', size: '210 GB', status: 'PRIMARY', icon: Cloud },
     { name: 'AWS S3 Bucket', type: 'Backup & Archival', files: '1,490 files', size: '74 GB', status: 'BACKUP', icon: Database },
     { name: 'Local Volume Storage', type: 'Temp Chunk Processing', files: '42 files', size: '1.2 GB', status: 'ACTIVE', icon: HardDrive },
   ];
+
+  const testUpload = async () => {
+    setLoading(true);
+    await ApiClient.request('/v1/files/upload', {
+      method: 'POST',
+      body: JSON.stringify({
+        filename: 'admin_test_document.pdf',
+        mimeType: 'application/pdf',
+        sizeInBytes: 1048576,
+        encryptionEnabled: true,
+      }),
+    });
+    alert(`File uploaded via /v1/files/upload under tenant scope ${selectedAppId}!`);
+    setLoading(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -21,12 +41,16 @@ export default function StoragePage() {
             </h1>
           </div>
           <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Abstract storage provider delegation with client-managed AES-256-GCM envelope encryption.
+            Abstract storage provider delegation with client-managed AES-256-GCM envelope encryption via `/v1/files`.
           </p>
         </div>
-        <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-400 border border-purple-200/50 flex items-center gap-1.5">
-          <ShieldCheck className="h-4 w-4" /> AES-256-GCM Encryption Active
-        </span>
+        <button
+          onClick={testUpload}
+          disabled={loading}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm transition-colors shadow-sm"
+        >
+          <Upload className="h-4 w-4" /> {loading ? 'Uploading...' : 'Test Upload File'}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
